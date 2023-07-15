@@ -89,11 +89,12 @@ let tx = 'PATA'
 **/
 
 let tx_arr = tx.split('')
+let arr_clone = arr
 
 for( let i = 0; i < arr.length; i++ ){
     //console.log( arr[i].includes('P') )
     
-    let row = arr[i]
+    let row = arr_clone[i]
 
     let free_space = row.reduce((total, item) => total + (item === 0 ? 1 : 0), 0) // total de espalos livres "0"
     let same_words = row.filter(letra => tx_arr.includes(letra)).length;
@@ -103,11 +104,16 @@ for( let i = 0; i < arr.length; i++ ){
         (free_space != 0 && same_words >= 1) // existe letrar iguais
     ){
         console.warn( `LINHA ${i} - ${same_words} COMPATIVEL` )
+
+        row.forEach(( col, j ) => {
+            console.log( arr_clone[i][j] )
+        })
         
-        break; // quando encontra uma coluna compativel interrompe o loop
+        //break; // quando encontra uma coluna compativel interrompe o loop
     }
     else {
         console.error( `LINHA ${i} - NADA COMPATIVEL` )
+        // arr_clone.splice(i, 1) // remover a array interna
     }
 }
 
