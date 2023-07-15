@@ -60,17 +60,14 @@ const board_inverse = array_inverse( board )
 
 
 let arr = [
-    /*['1a',   0, '1c', '1d'],
-    ['2a', 'xx', '2c', '2d'],
-    ['3a',   0,    0,  '-d'],
-    [  0,    0,    0,    0 ],*/
     ['S', 0, 0, 0, 0],
     ['P', 0, 0, 0, 0],
     ['A', 0, 0, 0, 0],
     ['R', 0, 0, 0, 0],
 ]
 
-let tx = 'PATAS'
+let tx = 'PATA'
+
 /*
     [S, 0, 0, 0, 0],
     [P, 0, 0, 0, 0],
@@ -93,16 +90,26 @@ let tx = 'PATAS'
 
 let tx_arr = tx.split('')
 
-arr.every(( lin ) => {
-    console.log( lin.includes('S') )
+for( let i = 0; i < arr.length; i++ ){
+    //console.log( arr[i].includes('P') )
+    
+    let row = arr[i]
 
-    let free = lin.reduce((total, item) => total + (item === 0 ? 1 : 0), 0) // total de espalos livres "0"
-    let zeroff = lin.filter(item => item !== 0) // remove os zeros
+    let free_space = row.reduce((total, item) => total + (item === 0 ? 1 : 0), 0) // total de espalos livres "0"
+    let same_words = row.filter(letra => tx_arr.includes(letra)).length;
 
-    console.log( zeroff )
-
-    if( lin.includes('S') ) return;
-})
+    if(
+        free_space >= tx_arr.length && // espaços livres maior ou igual a quantidade de letras
+        (free_space != 0 && same_words >= 1) // existe letrar iguais
+    ){
+        console.warn( `LINHA ${i} - ${same_words} COMPATIVEL` )
+        
+        break; // quando encontra uma coluna compativel interrompe o loop
+    }
+    else {
+        console.error( `LINHA ${i} - NADA COMPATIVEL` )
+    }
+}
 
 
 
