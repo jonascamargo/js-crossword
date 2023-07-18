@@ -1,171 +1,158 @@
-/*
-
-PALAVRAS CRUZADAS
-
-- 
-
-*/
-
-// HELP - retorna numero passado por parametro sempre como positivo
-const num_positive = ( num ) => ( num < 0 ) ? num * -1 : num
+let grid = []
+let vertical = false
 
 
-let board_size = 5
+// ***** retorna numero passado por parametro sempre como positivo
+const to_positive = ( num ) => ( num < 0 ) ? num * -1 : num
 
-let board = Array.from({ length: board_size }, () => Array(board_size).fill(0))
+// ***** retorna uma nova array com os itens da mesma index como uma coluna da matriz
+Array.prototype.col_content = function( index ){ return this.map( row => row[index] ) }
 
-//  X "direita",    Y "baixo"
-// -X "esquerada", -Y "cima"
-let board_grow = [ 0, 0 ]
+// ***** procura e retorna a index da(s) linha(s) que contem as letras da nova palavra
+Array.prototype.in_rows = function( string )
+{
+    let letters = string.split('')
+    let grid_size = this.length
+    let result  = []
 
-let word_vertical = false
+    this.filter(( lin, i ) => {
+        let counter = lin.filter( ltr => letters.includes(ltr) ).length
+        let error   = lin.filter( char => char !== 0 && !letters.includes(char) )
+        let free_space = lin.filter( char => char === 0 ).length;
 
+        if( counter !== 0 && free_space > counter ) result.push( i )
+    })
 
-// aumentar tamanho da matriz
-const board_growth = ( upTo_x_y ) => {
-    if( (num_positive(upTo_x_y[0]) + num_positive(upTo_x_y[1])) === 0 ) return
+    return result
+}
 
-    let x_num = upTo_x_y[0]
-    let y_num = upTo_x_y[1]
+// ***** procura e retorna a index da(s) coluna(s) que contem as letras da nova palavra
+Array.prototype.in_cols = function( string )
+{
+    let letters = string.split('')
+    let result  = []
+
+    for( let i = 0; i < this[0].length; i++ )
+    {
+        let column  = this.col_content(i)
+        let counter = column.filter( (char) => letters.includes(char) ).length
+
+        if( counter !== 0 ) result.push( i )
+    }
+
+    return result
+}
+
+// **** aumentar tamanho da matriz
+// recebe uma array de dois valores [ x"horizontal", y"vertical" ]
+// valores negativo para esquerda, positivo para direita!
+Array.prototype.growth = function( up_xy ){
+    if( (to_positive(up_xy[0]) + to_positive(up_xy[1])) === 0 ) return
+
+    let x_num = up_xy[0]
+    let y_num = up_xy[1]
 
     // horizontal
     if( x_num !== 0 )
     {
-        let up = Array( num_positive(x_num) ).fill('_')
+        let up = Array( to_positive(x_num) ).fill(0)
 
         if( x_num < 0 )
-            board.map(( lin ) => lin.unshift(...up) )
+            this.map(( lin ) => lin.unshift(...up) )
         else
-            board.map(( lin ) => lin.push(...up) )
+            this.map(( lin ) => lin.push(...up) )
     }
 
     // vertical
     if( y_num !== 0 )
     {
-        let up = Array.from({ length: num_positive(y_num) }, () => Array(board_size + num_positive(x_num)).fill('_'))
+        let grid_size = this[0].length
+        let up = Array.from({ length: to_positive(y_num) }, () => Array(grid_size + to_positive(x_num)).fill(0))
 
         if( y_num < 0 )
-            board.unshift(...up)
+            this.unshift(...up)
         else
-            board.push(...up)
+            this.push(...up)
     }
 }
 
-// inverter array/board
-const array_inverse = ( board ) => board[0].map(( _, i ) => board.map( row => row[i] ))
-const board_inverse = array_inverse( board )
 
 
+////////////////////
 
-
-
-let arr = [
-    ['S', 0, 0, 0, 0],
-    ['P', 0, 0, 0, 0],
-    ['A', 0, 0, 0, 0],
-    ['R', 0, 0, 0, 0],
+grid = [
+    ['Z', 0, 0, 0],
+    [0, 0, 0, 'O'],
+    ['Z', 0, 'Y', 0],
+    ['X', 0, 0, 0],
 ]
 
-let tx = 'PATA'
+console.table( grid )
 
-/*
-    [S, 0, 0, 0, 0],
-    [P, 0, 0, 0, 0],
-    [A, 0, 0, 0, 0],
-    [R, 0, 0, 0, 0],
+//////////
 
-    P A T A
-*/
-
-/**
-     *** colocar uma palavra na HORIZONTAL
-    * [
-    *    o numero de espaços livres é igual ou maior q o numero de letras da nova palavra
-    *    as letras q ja existe são as mesmas E na mesma ordem da nova palavra
-    * ]
-    * se for a primeira letra NAO DEVE TER letras a direita 1 nivel a cima e abaixo
-    * se for a ultima letra NAO DEVE TER letras a esquerda 1 nivel a cima e abaixo
-    * se for no meio da palavra NAO DEVE TER letrar nem a direita nem a esquerda 1 nivel a cima e abaixo
-**/
-
-let tx_arr = tx.split('')
-let arr_clone = arr
-
-for( let i = 0; i < arr.length; i++ ){
-    //console.log( arr[i].includes('P') )
+add_word = function( word ){
+    let valid = true
+    let rows  = ( vertical ) ? grid.in_cols( word ) : grid.in_rows( word )
     
-    let row = arr_clone[i]
+    let letters = word.split('')
+    
 
-    let free_space = row.reduce((total, item) => total + (item === 0 ? 1 : 0), 0) // total de espalos livres "0"
-    let same_words = row.filter(letra => tx_arr.includes(letra)).length;
+    for( let i = 0; i < rows.length; i++ )
+    {
+        console.group( ((vertical) ? 'VERTICAL' : 'HORIZONTAL') +' - '+ word )
+        console.log( rows )
 
-    if(
-        free_space >= tx_arr.length && // espaços livres maior ou igual a quantidade de letras
-        (free_space != 0 && same_words >= 1) // existe letrar iguais
-    ){
-        console.warn( `LINHA ${i} - ${same_words} COMPATIVEL` )
+        let cntt = ( vertical ) ? grid.col_content(rows[i]) : grid[rows[i]]
+        let cntt_lft_top  = ( vertical ) ? grid.col_content(rows[i] -1) : grid[rows[i] -1]
+        let cntt_rgt_btm = ( vertical ) ? grid.col_content(rows[i] +1) : grid[rows[i] +1]
 
-        row.forEach(( col, j ) => {
-            console.log( arr_clone[i][j] )
+        // ***** VERTICAL
+        if( vertical ){}
+        // ***** HORIZONTAL
+        else {}
+
+        let same_ltr = letters.find((x) => {
+            return cntt.find((y) => { return (y === x) ? y : 0 })
         })
-        
-        //break; // quando encontra uma coluna compativel interrompe o loop
-    }
-    else {
-        console.error( `LINHA ${i} - NADA COMPATIVEL` )
-        // arr_clone.splice(i, 1) // remover a array interna
+
+        let index_ltr = letters.indexOf( same_ltr )
+        let index_row = cntt.indexOf( same_ltr )
+
+        let grid_hor_update   = index_row - index_ltr // valor negativo aumenta a grid para esquernda, valor positivo aumenta a grid para direita
+        let start_word_inline = index_row - index_ltr // index na linha onde começa a palavra
+        start_word_inline = ( start_word_inline < 0 ) ? 0 : start_word_inline
+
+        console.log( `index na palavra: [${index_ltr}] - index na linha: [${index_row}] - calculo [${grid_hor_update}]` )
+        console.log( `inde do inicio da palavra na linha: [${start_word_inline}]` )
+
+        if( grid_hor_update !== 0 ){
+            // ***** VERTICAL
+            if( vertical ){
+                grid.growth( [0, grid_hor_update] )
+            }
+            // ***** HORIZONTAL
+            else {
+                grid.growth( [grid_hor_update, 0] )
+            }
+        }
+
+        for( let c = 0; c < letters.length; c++ )
+        {
+            row[start_word_inline +c] = letters[c]
+        }
+
+        console.table( grid )
+
+
+        console.groupEnd()
+        vertical = !vertical
     }
 }
 
+add_word( 'PATO' )
+add_word( 'YNDUMM' )
 
 
+////////////////////
 
- 
-// [ linha, coluna ]
-/*
-let rank_around = ( item, grid = board, vertical = false ) => {
-    let lin = item[0],
-        col = item[1],
-        
-        rank_top = 0,
-        rank_btm = 0
-
-    if( !vertical ){
-        rank_top = arr_rank( grid[(lin -1)].slice((col -1), (col +2)) )
-        rank_btm = arr_rank( grid[(lin +1)].slice((col -1), (col +2)) )
-    }
-
-    // let lin_top = grid[lin][col]
-    
-    console.log( rank_top )
-    console.log( rank_btm )
-    // console.log( grid[(lin -1)].slice( (col -1), (col +2) ) )
-    // console.log( `peso da linha de cima: ${lin_top} - peso da linha inferior: ${lin_btm}` )
-}
-
-// retorna o total de areas vazias na array
-let arr_rank = ( arr ) => arr.reduce(( total, item ) => { return total + ((item === 0) ? 1 : 0) }, 0)
-
-rank_around( [1,1], arr )
-*/
-
-// varrendo por coluna da matriz
-/////
-/*
-arr.some(( lin, idx ) => {
-    for( let col = 0; col < lin.length; col++ ){
-        console.log( arr[col][idx] )
-    }
-
-    console.log( '-----------' )
-})
-*/
-
-/////
-/*arr.some(( lin ) => {
-    console.log( lin.length )
-})
-*/
-
-
-//console.table( board )
